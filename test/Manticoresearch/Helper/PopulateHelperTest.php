@@ -8,6 +8,11 @@ class PopulateHelperTest extends \PHPUnit\Framework\TestCase
     /** @var Client */
     private $client;
 
+    public function __construct()
+    {
+        parent::__construct('testDummy');
+    }
+
     public function getClient()
     {
         $params = [
@@ -83,7 +88,7 @@ class PopulateHelperTest extends \PHPUnit\Framework\TestCase
         return $this->client->indices()->describe(['index'=> $indexName]);
     }
 
-    public function status($indexName)
+    public function nodeStatus($indexName)
     {
         return $this->client->nodes()->status();
     }
