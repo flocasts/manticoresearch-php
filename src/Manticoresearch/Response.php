@@ -100,9 +100,46 @@ class Response
      */
     public function hasError()
     {
+        return $this->getErrors() === '';
+    }
+
+    /*
+     * Extract error array from respones item
+     * @param array $response
+     * @return array
+     */
+    private function extractError($response)
+    {
+        if (isset($response['error'])) {
+            return $response['error'];
+        } elseif (isset($response['errors'])) {
+            return $response['errors'];
+        }
+        return [];
+    }
+
+    /*
+     * Return error
+     * @return false|string
+     */
+    public function getErrors()
+    {
+        $errors = [];
         $response = $this->getResponse();
-        return (isset($response['error']) && $response['error'] !== '') ||
-            (isset($response['errors']) && $response['errors'] !== false);
+        if (isset($response['items'])) {
+            foreach ($response['items'] as $foo => $responseItem) {
+                foreach ($responseItem as $itemType => $itemResponse) {
+                    if ($error = $this->extractError($itemResponse)) {
+                        $errors[$itemType] = $error;
+                    }
+                }
+            }
+        }
+        if ($errors = $errors ?: $this->extractError($response)) {
+            $errors = is_array($errors) ? $errors : [$errors];
+            return json_encode($errors);
+        }
+        return '';
     }
 
     /*
