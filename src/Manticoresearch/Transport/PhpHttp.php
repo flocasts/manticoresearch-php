@@ -105,7 +105,7 @@ class PhpHttp extends Transport implements TransportInterface
         $this->logger->debug('Response body:', $response->getResponse());
 
         if ($response->hasError()) {
-            $this->logger->error('Response error:', [$response->getError()]);
+            $this->logger->error('Response error:', $response->getErrors());
             throw new ResponseException($request, $response);
         }
         return $response;

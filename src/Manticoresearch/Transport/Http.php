@@ -121,22 +121,10 @@ class Http extends \Manticoresearch\Transport implements TransportInterface
         );
         $this->logger->debug('Response body:', [json_decode($responseString, true)]);
         //soft error
-        if (
-            $response->hasError() && 
-            $errors = json_decode($response->getErrors(), true)
-        ) {
-            foreach ($errors as $type => $errorMessage) {
-                $type = is_numeric($type) ? '' : $type;
-                $errorMessage = is_array($errorMessage) ? $errorMessage : ['message' => $errorMessage];
-                $this->logger->error(
-                    ucfirst(
-                        trim(
-                            $type . ' response error:'
-                        )
-                    ),
-                    $errorMessage
+        if ($response->hasError()) {
+            $this->logger->error('Response error:',
+                    json_decode($response->getErrors(), true)
                 );
-            }
             throw new ResponseException($request, $response);
         }
         return $response;

@@ -100,7 +100,9 @@ class Response
      */
     public function hasError()
     {
-        return $this->getErrors() === '';
+        $response = $this->getResponse();
+        return !empty($response['error']) ||
+            !empty($response['errors']);
     }
 
     /*
@@ -108,12 +110,22 @@ class Response
      * @param array $response
      * @return array
      */
-    private function extractError($response)
+    private function extractErrors($response): array
     {
-        if (isset($response['error'])) {
-            return $response['error'];
-        } elseif (isset($response['errors'])) {
-            return $response['errors'];
+        if (!empty($response['error'])) {
+            return is_array($response['error']) ? $response['error'] : ['trype' => $response['error']];
+        } elseif (
+            isset($response['items']) && 
+            !empty($response['errors']
+        )) {
+            $errors = [];
+            while ($item = array_shift($response['items'])) {
+                foreach ($item as $type => $context) {
+                    $errors = $this->extractErrors($context);
+                    $errors['action'] = $type;
+                }
+            }
+            return $errors;
         }
         return [];
     }
@@ -122,22 +134,13 @@ class Response
      * Return error
      * @return false|string
      */
-    public function getErrors()
+    public function getError()
     {
-        $errors = [];
-        $response = $this->getResponse();
-        if (isset($response['items'])) {
-            foreach ($response['items'] as $foo => $responseItem) {
-                foreach ($responseItem as $itemType => $itemResponse) {
-                    if ($error = $this->extractError($itemResponse)) {
-                        $errors[$itemType] = $error;
-                    }
-                }
-            }
-        }
-        if ($errors = $errors ?: $this->extractError($response)) {
-            $errors = is_array($errors) ? $errors : [$errors];
-            return json_encode($errors);
+        $errors = $this->extractErrors(
+            $this->getResponse()
+        );
+        if ($error = array_shift($errors)) {
+            return json_encode($error);
         }
         return '';
     }
@@ -146,16 +149,13 @@ class Response
      * Return error
      * @return false|string
      */
-    public function getError()
+    public function getErrors()
     {
-        $response = $this->getResponse();
-        if (isset($response['error'])) {
-            return json_encode($response['error']);
-        } elseif (isset($response['errors'])) {
-            return json_encode($response['errors']);
-        } else {
-            return '';
-        }
+        return json_encode(
+            $this->extractErrors(
+                $this->getResponse()
+            )
+        );
     }
 
     /*
