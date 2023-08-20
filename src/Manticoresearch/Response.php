@@ -113,9 +113,9 @@ class Response
     {
         $response = $this->getResponse();
         if (isset($response['error'])) {
-            return json_encode($response['error'], true);
+            return json_encode($response['error']);
         } elseif (isset($response['errors'])) {
-            return json_encode($response['errors'], true);
+            return json_encode($response['errors']);
         } else {
             return '';
         }
